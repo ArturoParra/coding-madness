@@ -1,4 +1,4 @@
 ---
-:t_unit: F
-:s_unit: m
-:d_unit: m
+:t_unit: c
+:s_unit: k
+:d_unit: k

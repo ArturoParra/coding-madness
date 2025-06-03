@@ -37,14 +37,15 @@ def get_weather(city)
   d_unit = settings[:d_unit]
 
   puts "The current weather in #{city} is:"
-  if t_unit.casecmp("C") == 0
+  if t_unit.casecmp?("C")
     puts "Temperature: #{data['current']['temp_c']}°C"
     puts "Feels like: #{data['current']['feelslike_c']}°C"
   end
   if t_unit.casecmp?("F")
     puts "Temperature: #{data['current']['temp_f']}°F"
     puts "Feels like: #{data['current']['feelslike_f']}°F"
-  else
+  end
+  if !t_unit.casecmp?("C") && !t_unit.casecmp?("F")
     puts "Error: Wrong settings for temperature units"
   end
 
@@ -55,8 +56,9 @@ def get_weather(city)
   end
   if s_unit.casecmp?("m")
     puts "Wind Speed: #{data['current']['wind_mph']} mph"
-  else
-    puts "Error: wrong settings for speed units"
+  end
+  if !s_unit.casecmp?("k") && !s_unit.casecmp?("m")
+    puts "Error: Wrong settings for speed units"
   end
 
   puts "Humidity: #{data['current']['humidity']}%"
@@ -65,9 +67,10 @@ def get_weather(city)
     puts "Visibility: #{data['current']['vis_km']} km"
   end
   if d_unit.casecmp?('m')
-    puts "Visibility: #{data['current']['vis_miles']} m"
-  else
-    puts "Error: wrong settings for distance units"
+    puts "Visibility: #{data['current']['vis_miles']} mi"
+  end
+  if !d_unit.casecmp?("k") && !d_unit.casecmp?("m")
+    puts "Error: Wrong settings for distance units"
   end
 
   puts "Last Updated: #{data['current']['last_updated']}"
@@ -106,6 +109,44 @@ def set_city()
 
 end
 
+def set_settings()
+
+  settings = YAML.load_file($settings_file)
+
+  loop do
+    puts "Settings:"
+    puts "1.- Temperature unit: #{settings[:t_unit]}"
+    puts "2.- Speed unit: #{settings[:s_unit]}"
+    puts "3.- Distance unit: #{settings[:d_unit]}"
+    puts "0.- Exit settings"
+    puts "Select a setting to modify:"
+
+    option = gets.chomp.to_i
+
+    case option
+      when 1
+        puts "Set temperature unit: "
+        settings[:t_unit] = gets.chomp.strip
+      when 2
+        puts "Set speed unit: "
+        settings[:s_unit] = gets.chomp.strip
+      when 3
+        puts "Set distance unit: "
+        settings[:d_unit] = gets.chomp.strip
+      when 0
+        break
+      else
+        puts "Select a valid option"
+    end
+
+    File.open($settings_file, 'w') do |file|
+      file.write(settings.to_yaml)
+    end
+
+  end
+
+end
+
 def menu()
   puts "------------ Weather API ------------"
   puts "1. Get current weather"
@@ -134,7 +175,7 @@ def menu()
       end
 
     when 3
-      puts "This feature is not implemented yet."
+      set_settings()
     when 4
       puts "This feature is not implemented yet."
     when 5
