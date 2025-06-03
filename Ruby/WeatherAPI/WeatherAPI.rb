@@ -1,6 +1,7 @@
 require 'net/http'
 require 'uri'
 require 'json'
+require 'yaml'
 
 #API KEY: ae0e31289f9d4053b2b173043250206
 #API URL: http://api.weatherapi.com/v1/current.json?key=ae0e31289f9d4053b2b173043250206
@@ -14,6 +15,7 @@ require 'json'
 
 #Metodo para ver el historial de ciudades consultadas
 
+$settings_file = "settings.txt"
 
 def get_weather(city)
 
@@ -28,13 +30,45 @@ def get_weather(city)
     return
   end
 
-  puts "The current Weather in #{city} is:"
-  puts "Temperature: #{data['current']['temp_c']}°C"
-  puts "Feels like: #{data['current']['feelslike_c']}°C"
-  print "Condition: #{data['current']['condition']['text']}"
-  puts "Wind Speed: #{data['current']['wind_kph']} kph"
+  settings = YAML.load_file($settings_file)
+
+  t_unit = settings[:t_unit]
+  s_unit = settings[:s_unit]
+  d_unit = settings[:d_unit]
+
+  puts "The current weather in #{city} is:"
+  if t_unit.casecmp("C") == 0
+    puts "Temperature: #{data['current']['temp_c']}°C"
+    puts "Feels like: #{data['current']['feelslike_c']}°C"
+  end
+  if t_unit.casecmp?("F")
+    puts "Temperature: #{data['current']['temp_f']}°F"
+    puts "Feels like: #{data['current']['feelslike_f']}°F"
+  else
+    puts "Error: Wrong settings for temperature units"
+  end
+
+  puts "Condition: #{data['current']['condition']['text']}"
+
+  if s_unit.casecmp?("k")
+    puts "Wind Speed: #{data['current']['wind_kph']} kph"
+  end
+  if s_unit.casecmp?("m")
+    puts "Wind Speed: #{data['current']['wind_mph']} mph"
+  else
+    puts "Error: wrong settings for speed units"
+  end
+
   puts "Humidity: #{data['current']['humidity']}%"
-  puts "Visibility: #{data['current']['vis_km']} km"
+
+  if d_unit.casecmp?('k')
+    puts "Visibility: #{data['current']['vis_km']} km"
+  end
+  if d_unit.casecmp?('m')
+    puts "Visibility: #{data['current']['vis_miles']} m"
+  else
+    puts "Error: wrong settings for distance units"
+  end
 
   puts "Last Updated: #{data['current']['last_updated']}"
 end
@@ -85,33 +119,56 @@ def menu()
   option = gets.chomp.to_i
 
   case option
-  when 1
-    city = set_city()
+    when 1
+      city = set_city()
 
-    if !city.empty?
-      get_weather(city)
-    end
+      if !city.empty?
+        get_weather(city)
+      end
 
-  when 2
-    city = set_city()
+    when 2
+      city = set_city()
 
-    if !city.empty?
-      get_weekly_weather(city)
-    end
+      if !city.empty?
+        get_weekly_weather(city)
+      end
 
-  when 3
-    puts "This feature is not implemented yet."
-  when 4
-    puts "This feature is not implemented yet."
-  when 5
-    puts "Exiting the program. Goodbye!"
-    exit
-  else
-    puts "Invalid option. Please try again."
+    when 3
+      puts "This feature is not implemented yet."
+    when 4
+      puts "This feature is not implemented yet."
+    when 5
+      puts "Exiting the program. Goodbye!"
+      exit
+    else
+      puts "Invalid option. Please try again."
   end
 end
 
+def settings()
 
+  unless File.exist?($settings_file)
+    puts "Settings file doesn't exists, creating..."
+
+    default_settings = {
+      t_unit: "F",
+      s_unit: "m",
+      d_unit: "m"
+    }
+
+    File.open($settings_file, 'w') do |file|
+      file.write(default_settings.to_yaml)
+    end
+
+  else
+
+    puts "Loading settings..."
+
+  end
+
+end
+
+settings()
 
 # Main loop to keep the program running
 loop do
