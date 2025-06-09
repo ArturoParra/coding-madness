@@ -16,6 +16,7 @@ require 'yaml'
 #Metodo para ver el historial de ciudades consultadas
 
 $settings_file = "settings.txt"
+$history = []
 
 def get_weather(city)
 
@@ -88,10 +89,21 @@ def get_weekly_weather(city)
     return
   end
 
+  settings = YAML.load_file($settings_file)
+
   puts "This week's forecast #{city} is:"
   
   data['forecast']['forecastday'].each do |day|
-    puts "Fecha: #{day['date']}, Max: #{day['day']['maxtemp_c']}°C, Min: #{day['day']['mintemp_c']}°C, Avg: #{day['day']['avgtemp_c']}°C"
+    if settings[:t_unit].casecmp?("C")
+      puts "Fecha: #{day['date']}, Max: #{day['day']['maxtemp_c']}°C, Min: #{day['day']['mintemp_c']}°C, Avg: #{day['day']['avgtemp_c']}°C"
+    end
+    if settings[:t_unit].casecmp?("F")
+      puts "Fecha: #{day['date']}, Max: #{day['day']['maxtemp_f']}°F, Min: #{day['day']['mintemp_f']}°F, Avg: #{day['day']['avgtemp_f']}°F"
+    end
+    if !settings[:t_unit].casecmp?("F") && !settings[:t_unit].casecmp?("C")
+      puts "Error: wrong settings for temperature units"
+    end
+
   end
 
 end
@@ -147,6 +159,23 @@ def set_settings()
 
 end
 
+def set_history(city)
+    $history.push(city)
+end
+
+def get_history()
+  if $history.empty?
+        puts "Your search history is empty."
+        return
+  end
+  puts "History:"
+    $history.each do |city|
+      print "'" + city + "'"
+    end
+  print "\n"
+end
+  
+
 def menu()
   puts "------------ Weather API ------------"
   puts "1. Get current weather"
@@ -162,6 +191,7 @@ def menu()
   case option
     when 1
       city = set_city()
+      set_history(city)
 
       if !city.empty?
         get_weather(city)
@@ -169,6 +199,7 @@ def menu()
 
     when 2
       city = set_city()
+      set_history(city)
 
       if !city.empty?
         get_weekly_weather(city)
@@ -177,7 +208,7 @@ def menu()
     when 3
       set_settings()
     when 4
-      puts "This feature is not implemented yet."
+      get_history()
     when 5
       puts "Exiting the program. Goodbye!"
       exit
